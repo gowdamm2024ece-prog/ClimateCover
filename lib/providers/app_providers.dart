@@ -8,53 +8,85 @@ import '../models/disruption.dart';
 import '../core/mock_data.dart';
 
 // ── Auth ──────────────────────────────────────────────────────────
+// sentinel to allow explicit null clearing
+const _keep = Object();
+
 class AuthState {
   final bool isLoggedIn;
   final bool isLoading;
   final Worker? worker;
   final String? error;
+  final String? pendingAadhaar;
+  final String? userType;
 
   const AuthState({
     this.isLoggedIn = false,
     this.isLoading = false,
     this.worker,
     this.error,
+    this.pendingAadhaar,
+    this.userType,
   });
 
   AuthState copyWith({
     bool? isLoggedIn,
     bool? isLoading,
     Worker? worker,
-    String? error,
+    Object? error = _keep,
+    Object? pendingAadhaar = _keep,
+    Object? userType = _keep,
   }) =>
       AuthState(
         isLoggedIn: isLoggedIn ?? this.isLoggedIn,
         isLoading: isLoading ?? this.isLoading,
         worker: worker ?? this.worker,
-        error: error,
+        error: error == _keep ? this.error : error as String?,
+        pendingAadhaar: pendingAadhaar == _keep
+            ? this.pendingAadhaar
+            : pendingAadhaar as String?,
+        userType:
+            userType == _keep ? this.userType : userType as String?,
       );
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier() : super(const AuthState());
 
-  Future<bool> login(String phone, String password) async {
-    state = state.copyWith(isLoading: true);
+  Future<String> sendOtp(String aadhaarNumber) async {
+    state = state.copyWith(isLoading: true, error: null);
     await Future.delayed(const Duration(milliseconds: 800));
-    // TODO: replace with fromJson(Map<String,dynamic> json) when backend ready
-    // TODO: real API: final res = await ApiClient().post('/auth/login/', {'username': phone, 'password': password});
+    final lastDigit = int.parse(aadhaarNumber[aadhaarNumber.length - 1]);
+    final type = lastDigit.isEven ? 'existing_user' : 'new_user';
     state = state.copyWith(
       isLoading: false,
-      isLoggedIn: true,
-      worker: MockData.currentWorker,
+      pendingAadhaar: aadhaarNumber,
+      userType: type,
     );
+    return type;
+  }
+
+  Future<bool> verifyOtp(String aadhaar, String otp) async {
+    state = state.copyWith(isLoading: true, error: null);
+    await Future.delayed(const Duration(milliseconds: 800));
+    if (otp != '123456') {
+      state = state.copyWith(isLoading: false, error: 'Invalid OTP. Use 123456');
+      return false;
+    }
+    if (state.userType == 'existing_user') {
+      state = state.copyWith(
+        isLoading: false,
+        isLoggedIn: true,
+        worker: MockData.currentWorker,
+      );
+    } else {
+      state = state.copyWith(isLoading: false);
+    }
     return true;
   }
 
   Future<bool> register(Map<String, dynamic> data) async {
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(isLoading: true, error: null);
     await Future.delayed(const Duration(milliseconds: 1000));
-    // TODO: real API: await ApiClient().post('/auth/register/', data);
     state = state.copyWith(
       isLoading: false,
       isLoggedIn: true,
@@ -64,7 +96,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   void logout() {
-    // TODO: clear JWT from secure storage
     state = const AuthState();
   }
 }

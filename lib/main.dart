@@ -12,17 +12,17 @@ void main() {
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.dark,
   ));
-  runApp(const ProviderScope(child: GigShieldApp()));
+  runApp(const ProviderScope(child: ClimateCoverApp()));
 }
 
-class GigShieldApp extends ConsumerWidget {
-  const GigShieldApp({super.key});
+class ClimateCoverApp extends ConsumerWidget {
+  const ClimateCoverApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     return MaterialApp.router(
-      title: 'GigShield',
+      title: 'Climate Cover',
       theme: AppTheme.light,
       routerConfig: router,
       debugShowCheckedModeBanner: false,

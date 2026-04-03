@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../screens/auth/splash_screen.dart';
 import '../screens/auth/login_screen.dart';
+import '../screens/auth/otp_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/policy/plan_select_screen.dart';
@@ -13,8 +14,6 @@ import '../screens/slots/slot_entry_screen.dart';
 import '../screens/claims/claim_history_screen.dart';
 import '../screens/claims/claim_detail_screen.dart';
 import '../screens/home/main_shell.dart';
-
-// FIX: removed duplicate PolicyDetailScreen — it lives in policy_detail_screen.dart only
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -26,7 +25,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/login',
-        builder: (context, state) => const LoginScreen(),
+        builder: (context, state) => const AadhaarEntryScreen(),
+      ),
+      GoRoute(
+        path: '/otp',
+        builder: (context, state) => const OtpScreen(),
       ),
       GoRoute(
         path: '/register',

@@ -1,4 +1,4 @@
-# GigShield
+# Climate Cover
 
 **AI-Powered Parametric Insurance for India's Delivery Workers**
 
@@ -8,13 +8,13 @@
 
 ## Problem Statement
 
-India's platform-based delivery partners — working for Zomato, Swiggy, Zepto, Amazon, and Blinkit — lose 20–30% of their monthly income when external disruptions like heavy rain, floods, or severe pollution make deliveries impossible. They have no safety net. GigShield fixes that.
+India's platform-based delivery partners — working for Zomato, Swiggy, Zepto, Amazon, and Blinkit — lose 20–30% of their monthly income when external disruptions like heavy rain, floods, or severe pollution make deliveries impossible. They have no safety net. Climate Cover fixes that.
 
 ---
 
 ## How It Works
 
-GigShield monitors weather and environmental conditions continuously. When a disruption threshold is crossed (rainfall > 50 mm/hr, AQI > 300, etc.), it:
+Climate Cover monitors weather and environmental conditions continuously. When a disruption threshold is crossed (rainfall > 50 mm/hr, AQI > 300, etc.), it:
 
 1. Detects the disruption automatically via public APIs
 2. Finds all active policy holders in the affected zone
@@ -26,7 +26,7 @@ GigShield monitors weather and environmental conditions continuously. When a dis
 
 ## Fraud Prevention & Data Reliability
 
-To prevent fraudulent activities such as a single individual creating and operating multiple accounts, our system integrates Aadhaar-based verification to ensure each user’s identity is unique and authentic. Additionally, to maintain high data reliability and eliminate the risk of user-manipulated inputs, all critical operational data is sourced directly from trusted third-party APIs (such as Zomato and similar platforms) rather than relying on manual entry. This approach ensures accuracy, transparency, and integrity in both user verification and data collection processes.
+To prevent fraudulent activities such as a single individual creating and operating multiple accounts, Climate Cover integrates Aadhaar-based verification to ensure each user’s identity is unique and authentic. Additionally, to maintain high data reliability and eliminate the risk of user-manipulated inputs, all critical operational data is sourced directly from trusted third-party APIs (such as Zomato and similar platforms) rather than relying on manual entry. This approach ensures accuracy, transparency, and integrity in both user verification and data collection processes.
 
 ---
 
@@ -144,7 +144,7 @@ Used as eligibility proof to check if the user is  active consistently. It Affec
 
 ## Fraud Detection System
  
-GigShield uses a multi-layer fraud detection pipeline combining deterministic rules with ML anomaly detection. Every claim passes through all layers before payout is initiated.
+Climate Cover uses a multi-layer fraud detection pipeline combining deterministic rules with ML anomaly detection. Every claim passes through all layers before payout is initiated.
  
 ### Layer 1 — GPS Zone Validation
  
@@ -168,7 +168,7 @@ if speed > 120 km/h → claim auto-blocked (impossible without aircraft)
 
 ## Coverage Scope
 
-GigShield covers **income loss only**. Strictly excluded per DEVTrails rules:
+Climate Cover covers **income loss only**. Strictly excluded per DEVTrails rules:
 - Vehicle repairs or maintenance
 - Health insurance or medical expenses
 - Accident liability or injury compensation

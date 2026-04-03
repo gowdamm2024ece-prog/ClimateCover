@@ -18,9 +18,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
-  final _aadhaarCtrl = TextEditingController();
   final _upiCtrl = TextEditingController();
-  final _passCtrl = TextEditingController();
   String _platform = 'Zomato';
   String _city = 'Mumbai';
   int _step = 0;
@@ -30,23 +28,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   void dispose() {
-    _nameCtrl.dispose(); _phoneCtrl.dispose();
-    _aadhaarCtrl.dispose(); _upiCtrl.dispose(); _passCtrl.dispose();
+    _nameCtrl.dispose();
+    _phoneCtrl.dispose();
+    _upiCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final aadhaar = ref.read(authProvider).pendingAadhaar ?? '';
     await ref.read(authProvider.notifier).register({
       'first_name': _nameCtrl.text.split(' ').first,
       'last_name': _nameCtrl.text.split(' ').skip(1).join(' '),
       'phone_number': _phoneCtrl.text,
-      'aadhaar_number': _aadhaarCtrl.text,
+      'aadhaar_number': aadhaar,
       'platform': _platform.toLowerCase(),
       'city': _city,
       'upi_id': _upiCtrl.text,
-      'username': _phoneCtrl.text,
-      'password': _passCtrl.text,
     });
     if (mounted) context.go('/plans');
   }
@@ -54,12 +52,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(authProvider);
+    final aadhaar = state.pendingAadhaar ?? '';
+    // Format for display: "XXXX XXXX XXXX"
+    final displayAadhaar = aadhaar.length == 12
+        ? '${aadhaar.substring(0, 4)} ${aadhaar.substring(4, 8)} ${aadhaar.substring(8)}'
+        : aadhaar;
+
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-          onPressed: () => _step == 0 ? context.go('/login') : setState(() => _step--),
+          onPressed: () =>
+              _step == 0 ? context.go('/login') : setState(() => _step--),
         ),
         title: Text(_step == 0 ? 'Personal details' : 'Work details'),
       ),
@@ -70,16 +75,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               child: Row(
-                children: List.generate(2, (i) => Expanded(
-                  child: Container(
-                    height: 4,
-                    margin: EdgeInsets.only(right: i == 0 ? 6 : 0),
-                    decoration: BoxDecoration(
-                      color: i <= _step ? AppColors.primary : AppColors.border,
-                      borderRadius: BorderRadius.circular(2),
+                children: List.generate(
+                  2,
+                  (i) => Expanded(
+                    child: Container(
+                      height: 4,
+                      margin: EdgeInsets.only(right: i == 0 ? 6 : 0),
+                      decoration: BoxDecoration(
+                        color: i <= _step ? AppColors.primary : AppColors.border,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
-                )),
+                ),
               ),
             ),
             Expanded(
@@ -87,7 +95,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 padding: const EdgeInsets.all(24),
                 child: Form(
                   key: _formKey,
-                  child: _step == 0 ? _buildStep1() : _buildStep2(state),
+                  child: _step == 0
+                      ? _buildStep1(displayAadhaar)
+                      : _buildStep2(state),
                 ),
               ),
             ),
@@ -97,14 +107,59 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  Widget _buildStep1() {
+  Widget _buildStep1(String displayAadhaar) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Tell us about yourself', style: AppText.h2),
         const SizedBox(height: 6),
-        const Text('We verify your identity securely', style: AppText.body),
+        const Text('Complete your profile to activate coverage', style: AppText.body),
         const SizedBox(height: 28),
+
+        // Aadhaar — locked, verified
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppColors.successLight,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.success.withAlpha(100)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.fingerprint, color: AppColors.success, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Aadhaar verified',
+                      style: TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.success,
+                      ),
+                    ),
+                    Text(
+                      displayAadhaar,
+                      style: const TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.ink,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.check_circle_rounded,
+                  color: AppColors.success, size: 20),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
         GsTextField(
           controller: _nameCtrl,
           label: 'Full name',
@@ -119,26 +174,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           hint: '9876543210',
           keyboardType: TextInputType.phone,
           prefixIcon: Icons.phone_outlined,
-          validator: (v) => v == null || v.length < 10 ? 'Enter 10-digit number' : null,
-        ),
-        const SizedBox(height: 16),
-        GsTextField(
-          controller: _aadhaarCtrl,
-          label: 'Aadhaar number',
-          hint: '1234 5678 9012',
-          keyboardType: TextInputType.number,
-          prefixIcon: Icons.credit_card_outlined,
-          validator: (v) => v == null || v.replaceAll(' ', '').length != 12
-              ? 'Enter 12-digit Aadhaar' : null,
-        ),
-        const SizedBox(height: 16),
-        GsTextField(
-          controller: _passCtrl,
-          label: 'Create password',
-          hint: 'Min 8 characters',
-          obscureText: true,
-          prefixIcon: Icons.lock_outline_rounded,
-          validator: (v) => v == null || v.length < 8 ? 'Min 8 characters' : null,
+          validator: (v) =>
+              v == null || v.length < 10 ? 'Enter 10-digit number' : null,
         ),
         const SizedBox(height: 32),
         GsButton(
@@ -160,29 +197,33 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         const Text('Helps us calculate your accurate premium', style: AppText.body),
         const SizedBox(height: 28),
 
-        // Platform selector
         _SectionLabel('Delivery platform'),
         const SizedBox(height: 10),
         Wrap(
-          spacing: 8, runSpacing: 8,
-          children: _platforms.map((p) => _Chip(
-            label: p,
-            selected: _platform == p,
-            onTap: () => setState(() => _platform = p),
-          )).toList(),
+          spacing: 8,
+          runSpacing: 8,
+          children: _platforms
+              .map((p) => _Chip(
+                    label: p,
+                    selected: _platform == p,
+                    onTap: () => setState(() => _platform = p),
+                  ))
+              .toList(),
         ),
         const SizedBox(height: 20),
 
-        // City selector
         _SectionLabel('Your city'),
         const SizedBox(height: 10),
         Wrap(
-          spacing: 8, runSpacing: 8,
-          children: _cities.map((c) => _Chip(
-            label: c,
-            selected: _city == c,
-            onTap: () => setState(() => _city = c),
-          )).toList(),
+          spacing: 8,
+          runSpacing: 8,
+          children: _cities
+              .map((c) => _Chip(
+                    label: c,
+                    selected: _city == c,
+                    onTap: () => setState(() => _city = c),
+                  ))
+              .toList(),
         ),
         const SizedBox(height: 20),
 
@@ -199,6 +240,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           isLoading: state.isLoading,
           onPressed: _submit,
         ),
+        if (state.error != null) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.dangerLight,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              state.error!,
+              style: const TextStyle(
+                  color: AppColors.danger, fontSize: 13, fontFamily: 'Sora'),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -209,7 +265,11 @@ class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text);
   @override
   Widget build(BuildContext context) => Text(text,
-      style: const TextStyle(fontFamily: 'Sora', fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.inkLight));
+      style: const TextStyle(
+          fontFamily: 'Sora',
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: AppColors.inkLight));
 }
 
 class _Chip extends StatelessWidget {

@@ -1,37 +1,35 @@
 // lib/screens/auth/login_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/gs_button.dart';
-import '../../widgets/gs_text_field.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class AadhaarEntryScreen extends ConsumerStatefulWidget {
+  const AadhaarEntryScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<AadhaarEntryScreen> createState() => _AadhaarEntryScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _phoneCtrl = TextEditingController();
-  final _passCtrl = TextEditingController();
-  bool _obscure = true;
+class _AadhaarEntryScreenState extends ConsumerState<AadhaarEntryScreen> {
+  final _ctrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
-    _phoneCtrl.dispose();
-    _passCtrl.dispose();
+    _ctrl.dispose();
     super.dispose();
   }
 
-  Future<void> _login() async {
+  String _rawAadhaar() => _ctrl.text.replaceAll(' ', '');
+
+  Future<void> _sendOtp() async {
     if (!_formKey.currentState!.validate()) return;
-    final success = await ref.read(authProvider.notifier)
-        .login(_phoneCtrl.text.trim(), _passCtrl.text);
-    if (success && mounted) context.go('/home');
+    await ref.read(authProvider.notifier).sendOtp(_rawAadhaar());
+    if (mounted) context.go('/otp');
   }
 
   @override
@@ -53,101 +51,125 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Row(
                   children: [
                     Container(
-                      width: 44,
-                      height: 44,
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
                         color: AppColors.primaryLight,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Icon(Icons.shield_rounded,
-                          color: AppColors.primary, size: 26),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: const [
+                          Icon(Icons.wb_cloudy_rounded,
+                              color: AppColors.primary, size: 28),
+                          Positioned(
+                            bottom: 7,
+                            right: 7,
+                            child: Icon(Icons.umbrella_rounded,
+                                color: AppColors.primary, size: 12),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(width: 12),
-                    const Text('GigShield',
-                        style: TextStyle(
-                          fontFamily: 'Sora',
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.ink,
-                        )),
+                    const Text(
+                      'Climate Cover',
+                      style: TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.ink,
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 48),
-                const Text('Welcome back', style: AppText.h1),
+                const SizedBox(height: 52),
+                const Text('Enter your Aadhaar', style: AppText.h1),
                 const SizedBox(height: 8),
-                const Text('Log in to your account',
-                    style: AppText.body),
+                const Text(
+                  'We\'ll send a one-time password to your Aadhaar-linked mobile number',
+                  style: AppText.body,
+                ),
                 const SizedBox(height: 36),
-
-                GsTextField(
-                  controller: _phoneCtrl,
-                  label: 'Phone number',
-                  hint: '98765 43210',
-                  keyboardType: TextInputType.phone,
-                  prefixIcon: Icons.phone_outlined,
-                  validator: (v) =>
-                      v == null || v.length < 10 ? 'Enter valid phone' : null,
-                ),
-                const SizedBox(height: 16),
-                GsTextField(
-                  controller: _passCtrl,
-                  label: 'Password',
-                  hint: '••••••••',
-                  obscureText: _obscure,
-                  prefixIcon: Icons.lock_outline_rounded,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                        _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                        color: AppColors.inkLight,
-                        size: 20),
-                    onPressed: () => setState(() => _obscure = !_obscure),
+                TextFormField(
+                  controller: _ctrl,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    _AadhaarFormatter(),
+                  ],
+                  decoration: InputDecoration(
+                    labelText: 'Aadhaar number',
+                    hintText: '1234 5678 9012',
+                    prefixIcon: const Icon(Icons.fingerprint,
+                        color: AppColors.primary),
+                    counterText: '',
                   ),
-                  validator: (v) =>
-                      v == null || v.isEmpty ? 'Enter password' : null,
+                  maxLength: 14, // 12 digits + 2 spaces
+                  validator: (v) {
+                    final raw = v?.replaceAll(' ', '') ?? '';
+                    if (raw.length != 12) return 'Enter a valid 12-digit Aadhaar number';
+                    if (RegExp(r'[^0-9]').hasMatch(raw)) return 'Only digits allowed';
+                    return null;
+                  },
                 ),
-                const SizedBox(height: 28),
-
+                const SizedBox(height: 32),
                 GsButton(
-                  label: 'Log in',
+                  label: 'Send OTP',
                   isLoading: state.isLoading,
-                  onPressed: _login,
+                  onPressed: _sendOtp,
                 ),
-                const SizedBox(height: 16),
-
-                if (state.error != null)
+                if (state.error != null) ...[
+                  const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: AppColors.dangerLight,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Text(state.error!,
-                        style: const TextStyle(
-                            color: AppColors.danger, fontSize: 13, fontFamily: 'Sora')),
-                  ),
-
-                const SizedBox(height: 32),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Don't have an account? ",
-                        style: AppText.body),
-                    GestureDetector(
-                      onTap: () => context.go('/register'),
-                      child: const Text('Register',
-                          style: TextStyle(
-                              fontFamily: 'Sora',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary)),
+                    child: Text(
+                      state.error!,
+                      style: const TextStyle(
+                          color: AppColors.danger,
+                          fontSize: 13,
+                          fontFamily: 'Sora'),
                     ),
-                  ],
+                  ),
+                ],
+                const SizedBox(height: 40),
+                Center(
+                  child: Text(
+                    'Your Aadhaar is used only for identity verification.\nNo data is stored without consent.',
+                    textAlign: TextAlign.center,
+                    style: AppText.small,
+                  ),
                 ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Formats a digit-only string as "XXXX XXXX XXXX"
+class _AadhaarFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    final digits = newValue.text.replaceAll(' ', '');
+    if (digits.length > 12) return oldValue;
+
+    final buffer = StringBuffer();
+    for (int i = 0; i < digits.length; i++) {
+      if (i == 4 || i == 8) buffer.write(' ');
+      buffer.write(digits[i]);
+    }
+    final formatted = buffer.toString();
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }

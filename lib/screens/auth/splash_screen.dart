@@ -20,7 +20,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1200));
     _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
     _scale = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut),
@@ -40,7 +41,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: const Color(0xFF0F4C81),
       body: Center(
         child: FadeTransition(
           opacity: _fade,
@@ -50,17 +51,29 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 80,
-                  height: 80,
+                  width: 88,
+                  height: 88,
                   decoration: BoxDecoration(
                     color: const Color(0x26FFFFFF),
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(28),
                   ),
-                  child: const Icon(Icons.shield_rounded, color: Colors.white, size: 44),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: const [
+                      Icon(Icons.wb_cloudy_rounded,
+                          color: Colors.white, size: 52),
+                      Positioned(
+                        bottom: 14,
+                        right: 14,
+                        child: Icon(Icons.umbrella_rounded,
+                            color: Color(0xCCFFFFFF), size: 22),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
                 const Text(
-                  'GigShield',
+                  'Climate Cover',
                   style: TextStyle(
                     fontFamily: 'Sora',
                     fontSize: 32,
@@ -70,12 +83,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
+                const Text(
                   'Income protection for delivery workers',
                   style: TextStyle(
                     fontFamily: 'Sora',
                     fontSize: 13,
-                    color: const Color(0xBFFFFFFF),
+                    color: Color(0xBFFFFFFF),
                   ),
                 ),
               ],
